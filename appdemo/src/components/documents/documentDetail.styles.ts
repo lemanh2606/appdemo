@@ -1,0 +1,57 @@
+import { StyleSheet } from "react-native";
+
+export const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: "#F3F4F6" },
+    content: { flex: 1 },
+    contentPadding: { padding: 16, gap: 16 },
+    // Header
+    header: { backgroundColor: "#FFF", paddingHorizontal: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
+    headerTop: { flexDirection: "row", alignItems: "center", paddingVertical: 12, gap: 12 },
+    backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#EFF6FF", alignItems: "center", justifyContent: "center" },
+    headerTitle: { flex: 1, fontSize: 16, fontWeight: "bold", color: "#111827", lineHeight: 22 },
+    headerAction: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
+    badgeRow: { flexDirection: "row", gap: 8, marginTop: 4, paddingLeft: 52 },
+    badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+    badgeText: { fontSize: 12, color: "#FFF", fontWeight: "bold" },
+    // Footer
+    footer: { padding: 16, backgroundColor: "#FFF", flexDirection: "row", gap: 12, borderTopWidth: 1, borderTopColor: "#E5E7EB" },
+    primaryButton: { flex: 2, backgroundColor: "#2563EB", paddingVertical: 14, borderRadius: 10, flexDirection: "row", alignItems: "center", justifyContent: "center" },
+    primaryButtonText: { color: "#FFF", fontSize: 15, fontWeight: "bold" },
+    secondaryButton: { flex: 1, backgroundColor: "#6B7280", paddingVertical: 14, borderRadius: 10, flexDirection: "row", alignItems: "center", justifyContent: "center" },
+    secondaryButtonText: { color: "#FFF", fontSize: 15, fontWeight: "bold" },
+    // Edit form
+    checkboxRow: { flexDirection: "row", alignItems: "center", marginTop: 8, gap: 8 },
+    checkbox: { width: 18, height: 18, borderRadius: 4, backgroundColor: "#2563EB", alignItems: "center", justifyContent: "center" },
+    checkboxLabel: { fontSize: 13, color: "#374151" },
+    editActionRow: { flexDirection: "row", justifyContent: "flex-end", gap: 12, marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#F3F4F6" },
+    cancelButton: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8, backgroundColor: "#F3F4F6" },
+    cancelButtonText: { fontSize: 14, fontWeight: "600", color: "#374151" },
+    saveButton: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8, backgroundColor: "#2563EB" },
+    saveButtonText: { fontSize: 14, fontWeight: "600", color: "#FFF" },
+    // Comment
+    inputLabel: { fontSize: 13, fontWeight: "600", color: "#374151", marginBottom: 4 },
+    textInput: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 8, padding: 12, minHeight: 80, textAlignVertical: "top", fontSize: 14 },
+    errorText: { fontSize: 12, color: "#EF4444", marginTop: 4 },
+    // Recipients
+    recipientHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    subLabel: { fontSize: 12, color: "#6B7280", marginBottom: 4 },
+    tagContainer: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 8 },
+    tag: { backgroundColor: "#F3F4F6", borderWidth: 1, borderColor: "#E5E7EB", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+    tagText: { fontSize: 12, color: "#374151", fontWeight: "500" },
+    moreText: { fontSize: 12, color: "#2563EB", fontWeight: "500" },
+    // Files
+    fileCard: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#F9FAFB", borderRadius: 12, padding: 12, borderWidth: 1, borderColor: "#E5E7EB" },
+    fileInfo: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
+    fileIconBox: { width: 44, height: 44, borderRadius: 8, backgroundColor: "#FFF", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#F3F4F6" },
+    fileName: { fontSize: 14, fontWeight: "600", color: "#111827" },
+    fileSize: { fontSize: 12, color: "#9CA3AF" },
+    statusBadge: { backgroundColor: "#DBEAFE", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+    statusBadgeText: { fontSize: 10, color: "#2563EB", fontWeight: "600" },
+    fileActions: { flexDirection: "row", alignItems: "center", gap: 8 },
+    smallFileAction: { padding: 8 },
+    mainFileAction: { width: 36, height: 36, borderRadius: 8, backgroundColor: "#2563EB", alignItems: "center", justifyContent: "center" },
+    outlineButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 12, borderRadius: 8, borderWidth: 1, borderColor: "#2563EB", borderStyle: "dashed", gap: 8, marginTop: 8 },
+    outlineButtonText: { fontSize: 14, color: "#2563EB", fontWeight: "600" },
+    emptyText: { fontSize: 13, color: "#9CA3AF", fontStyle: "italic" },
+    removeDocBtn: { position: "absolute", top: -8, right: -8, zIndex: 10 },
+});

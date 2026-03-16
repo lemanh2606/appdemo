@@ -2,15 +2,12 @@ import React from "react";
 import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
 
 export const AuthHeader = () => {
-  // Thay thế biến này bằng require('./đường-dẫn') nếu bạn tải hình ảnh thực về máy
-  const logoUrl = "D:\test\appdemo\appdemo\assets\logo\logoBoTaiChinh.png";
-
   return (
     // Box hiển thị khu vực logo + Tiêu đề
     <View style={styles.headerContainer}>
       {/* Component hỗ trợ tải logo từ url không tốn hiệu năng, resizeMode cho scale vừa phải độ phân giải */}
       <Image
-        source={require("../../assets/logo/logoBoTaiChinh.png")}
+        source={require("../../../assets/logo/logoBoTaiChinh.png")}
         style={styles.logo}
         resizeMode="contain"
       />
