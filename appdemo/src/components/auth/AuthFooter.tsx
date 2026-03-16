@@ -16,12 +16,15 @@ export const AuthFooter = () => {
 // Khai báo Style dưới dạng CSS
 const styles = StyleSheet.create({
   footerContainer: {
-    alignItems: "center", // Canh lề ở giữa
-    paddingBottom: 24,
-    // Bọc padding để giãn chân trang với màn hình
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 24,
   },
   footerText: {
-    fontSize: 12,
-    color: "#9CA3AF", // Màu xám nhạt hiện đại (Không gây chú ý quá mức)
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: -0.15,
+    textAlign: "center",
+    color: "#9CA3AF",
   },
 });

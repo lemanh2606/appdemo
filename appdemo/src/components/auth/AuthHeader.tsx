@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   titleText: {
     fontFamily: "Inter",
     fontSize: 24,
-    fontWeight: "600",
+    fontWeight: "800",
     lineHeight: 32,
     letterSpacing: 0.67,
     textAlign: "center",

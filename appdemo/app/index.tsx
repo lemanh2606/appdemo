@@ -1,7 +1,11 @@
-import { Ionicons } from "@expo/vector-icons"; // Thư viện icon phổ biến có sẵn và miễn phí của React Native
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
+
 import {
+  ActivityIndicator,
+  Alert,
   Dimensions,
   Keyboard,
   KeyboardAvoidingView,
@@ -13,28 +17,70 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import authService from "../services/authService";
+import { useAuth } from "./_layout";
 
-import { AuthFooter } from "../components/auth/AuthFooter";
-import { AuthHeader } from "../components/auth/AuthHeader";
-import { CustomButton } from "../components/ui/CustomButton";
-import { CustomInput } from "../components/ui/CustomInput";
+import { AuthFooter } from "../src/components/auth/AuthFooter";
+import { AuthHeader } from "../src/components/auth/AuthHeader";
+import { CustomButton } from "../src/components/ui/CustomButton";
+import { CustomInput } from "../src/components/ui/CustomInput";
 
 const { height } = Dimensions.get("window"); // Kéo giá trị chiều cao của thiết bị ra tại đây
 
 export default function LoginScreen() {
-  // Trạng thái giữ liệu của form mà user sẽ bắt đầu nhập cho đến khi submit.
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false); // Trạng thái của Checkbox được bấm vào
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Nơi thực hiện Submit dữ liệu khi đăng nhập
-  const handleLogin = () => {
-    // Thông thường gọi API Backend ở chỗ này, tạm thời làm demo.
-    console.log(
-      "Bạn tiến hành ấn nút đăng nhập kết nối API thông qua:",
-      username,
-      password,
-    );
+  const { signIn } = useAuth();
+  const router = useRouter();
+
+  const handleLogin = async () => {
+    if (!username.trim() || !password.trim()) {
+      Alert.alert(
+        "Thiếu thông tin",
+        "Vui lòng nhập tên đăng nhập và mật khẩu.",
+      );
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await authService.login(username.trim(), password);
+
+      console.log("result", result);
+
+      // request thành công + login thành công
+      if (result.ok && result.data?.success) {
+        await signIn({
+          token: result.data.token,
+          refreshToken: result.data.refreshToken,
+          user: result.data.staff,
+        });
+
+        router.replace("/(tabs)");
+      } else if (result.ok && result.data && !result.data.success) {
+        // API trả về lỗi logic (sai mật khẩu, bị khóa...)
+        Alert.alert(
+          "Đăng nhập thất bại",
+          result.data.message || "Vui lòng kiểm tra lại thông tin đăng nhập.",
+        );
+      } else {
+        // lỗi network / HTTP
+        Alert.alert(
+          "Lỗi kết nối",
+          result.error?.message || "Không thể kết nối tới máy chủ.",
+        );
+      }
+    } catch (error) {
+      console.log("LOGIN ERROR:", error);
+
+      Alert.alert("Lỗi hệ thống", "Đã có lỗi xảy ra. Vui lòng thử lại sau.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -106,8 +152,17 @@ export default function LoginScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Nút bấm Gửi Form được viết rời ở chỗ khác và gọi tại vị trí này */}
-                <CustomButton title="ĐĂNG NHẬP" onPress={handleLogin} />
+                {/* Nút bấm Gửi Form – hiển thị loading khi đang gọi API */}
+                <CustomButton
+                  title={isLoading ? "" : "ĐĂNG NHẬP"}
+                  onPress={handleLogin}
+                  disabled={isLoading}
+                  icon={
+                    isLoading ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : undefined
+                  }
+                />
               </View>
 
               <View style={{ marginTop: "auto" }}>
@@ -137,8 +192,8 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: "#FFFFFF", // Form màu trắng đắp ở dưới kéo dài
-    borderTopLeftRadius: 24, // Bị cong mép phần cắt trên cùng giao nhau với màu xanh
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 16, // Bị cong mép phần cắt trên cùng giao nhau với màu xanh
+    borderTopRightRadius: 16,
     paddingHorizontal: 24, // Dãn lề từ mép màn hình trái và phải vào
     paddingTop: 32, // Bỏ phần lề trên
     // Thuộc tính đổ bóng chân thật
@@ -150,14 +205,15 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     flex: 1,
-    gap: 8,
+    gap: 12,
   },
   optionsRow: {
     flexDirection: "row", // Chuyển giao diện cột chia làm 2 về ngang
     justifyContent: "space-between", // Trải thẳng hàng ra 2 mút để lấy khoảng rộng ở giữa
     alignItems: "center", // Căn 2 phần tử về vị trí ở ngay hàng dọc chính giữa
-    marginBottom: 32,
-    marginTop: -8, // Mẹo hút đẩy sát lên form trên
+    marginBottom: 12,
+    marginTop: 8,
+    // Mẹo hút đẩy sát lên form trên
   },
   checkboxContainer: {
     flexDirection: "row",
@@ -169,8 +225,12 @@ const styles = StyleSheet.create({
     color: "#4B5563",
   },
   forgotPassword: {
+    fontFamily: "Inter",
     fontSize: 14,
-    color: "#2563EB",
-    fontWeight: "500",
+    fontWeight: "400",
+    lineHeight: 21,
+    letterSpacing: -0.15,
+    textAlign: "center",
+    color: "#155DFC",
   },
 });
