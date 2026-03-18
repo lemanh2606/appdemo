@@ -1,175 +1,85 @@
+import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import sessionService from "./sessionService";
+
 /**
  * apiClient.ts
  * ─────────────────────────────────────────────────────────────
- * HTTP client nền tảng dùng chung cho toàn bộ ứng dụng.
- * Tập trung cấu hình base URL, timeout, header mặc định và
- * xử lý lỗi HTTP tại một nơi duy nhất.
- * ─────────────────────────────────────────────────────────────
+ * HTTP client built on Axios for the entire application.
+ * Centralizes base URL configuration, timeouts, interceptors,
+ * and standardizes API responses and errors.
  */
 
-/**
- * Địa chỉ gốc (base URL) của toàn bộ API backend.
- * Được đọc tự động từ file .env bởi Expo (yêu cầu prefix EXPO_PUBLIC_).
- */
+// --- Base Configuration ---
+
 const BASE_URL: string =
   process.env.EXPO_PUBLIC_API_URL ?? "https://api-qlvb.niq.vn/apiservice";
 
-console.log("BASE_URL:", BASE_URL);
-
-/** Thời gian tối đa chờ phản hồi từ server (mili-giây) */
 const TIMEOUT_MS = 15_000;
 
-// ─── Kiểu dữ liệu chung ──────────────────────────────────────
+// --- Types ---
 
-/** Cấu trúc response lỗi trả về từ server */
+/** Standard structure of an API Error */
 export interface ApiError {
   message: string;
   statusCode?: number;
+  code?: string;
 }
 
-/** Cấu trúc chung cho mọi response thành công / thất bại */
+/** Standard structure of all API Responses */
 export interface ApiResponse<T = unknown> {
   data: T | null;
   error: ApiError | null;
   ok: boolean;
 }
 
-// ─── Helper: timeout wrapper ──────────────────────────────────
+// --- Axios Instance Creation ---
 
-/**
- * Bọc một Promise với một timeout để tránh treo vô hạn.
- * @param promise  Promise gốc cần thực thi
- * @param ms       Thời gian chờ tính bằng mili-giây
- */
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(
-      () => reject(new Error(`Request timed out after ${ms}ms`)),
-      ms,
-    );
-    promise
-      .then((result) => {
-        clearTimeout(timer);
-        resolve(result);
-      })
-      .catch((err) => {
-        clearTimeout(timer);
-        reject(err);
-      });
-  });
-}
-
-// ─── Core request function ────────────────────────────────────
-
-/**
- * Hàm gửi HTTP request cơ bản.
- * @param endpoint  Đường dẫn API (VD: "/Auth/login")
- * @param options   Tuỳ chọn fetch giống RequestInit của Web API
- * @returns         ApiResponse<T> – bao gồm data, error, ok
- */
-async function request<T>(
-  endpoint: string,
-  options: RequestInit = {},
-): Promise<ApiResponse<T>> {
-  const url = `${BASE_URL}${endpoint}`;
-
-  // Merge header mặc định – tự động đặt Content-Type JSON
-  const headers: HeadersInit = {
+const apiClient: AxiosInstance = axios.create({
+  baseURL: BASE_URL,
+  timeout: TIMEOUT_MS,
+  headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
-    ...(options.headers ?? {}),
-  };
+  },
+});
 
-  try {
-    const response = await withTimeout(
-      fetch(url, { ...options, headers }),
-      TIMEOUT_MS,
-    );
+// --- Interceptors ---
 
-    // Đọc body một lần duy nhất
-    const text = await response.text();
-
-    // Cố gắng parse thành JSON, nếu không được thì giữ nguyên text
-    let parsed: unknown;
-    try {
-      parsed = text ? JSON.parse(text) : null;
-    } catch {
-      parsed = text;
+// 1. Request Interceptor: Attach Authorization Token
+apiClient.interceptors.request.use(
+  async (config: InternalAxiosRequestConfig) => {
+    const token = await sessionService.getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-
-    if (!response.ok) {
-      // Server trả về HTTP error (4xx, 5xx)
-      const message =
-        (parsed as { message?: string })?.message ??
-        `HTTP ${response.status}: ${response.statusText}`;
-
-      return {
-        data: null,
-        error: { message, statusCode: response.status },
-        ok: false,
-      };
-    }
-
-    return { data: parsed as T, error: null, ok: true };
-  } catch (err: unknown) {
-    // Lỗi mạng hoặc timeout
-    const message =
-      err instanceof Error ? err.message : "Lỗi kết nối không xác định";
-    return { data: null, error: { message }, ok: false };
+    return config;
+  },
+  (error: AxiosError) => {
+    return Promise.reject(error);
   }
-}
+);
 
-// ─── Xuất các method tiện lợi ────────────────────────────────
-
-const apiClient = {
-  /**
-   * Gửi HTTP GET
-   * @param endpoint  VD: "/User/profile"
-   * @param headers   Header bổ sung nếu cần (VD: Authorization)
-   */
-  get<T>(endpoint: string, headers?: HeadersInit): Promise<ApiResponse<T>> {
-    return request<T>(endpoint, { method: "GET", headers });
+// 2. Response Interceptor: Handle Global Errors & Formatting
+apiClient.interceptors.response.use(
+  (response: AxiosResponse) => {
+    // Return standard ApiResponse format for successful responses
+    // Note: If you prefer React Query to handle raw data, you can return response.data directly.
+    return response;
   },
+  async (error: AxiosError) => {
+    // Log error for debugging
+    console.error(`[API Error] ${error.config?.method?.toUpperCase()} ${error.config?.url}:`, error.response?.status, error.message);
 
-  /**
-   * Gửi HTTP POST với body JSON
-   * @param endpoint  VD: "/Auth/login"
-   * @param body      Đối tượng JavaScript sẽ được stringify thành JSON
-   * @param headers   Header bổ sung nếu cần
-   */
-  post<T>(
-    endpoint: string,
-    body: unknown,
-    headers?: HeadersInit,
-  ): Promise<ApiResponse<T>> {
-    return request<T>(endpoint, {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers,
-    });
-  },
+    // Handle session expiration (e.g., 401 Unauthorized)
+    if (error.response?.status === 401) {
+      // Potentially trigger global logout or token refresh
+      // await sessionService.clear(); 
+      // Redirect logic can be triggered via observers or event emitters if needed
+    }
 
-  /**
-   * Gửi HTTP PUT với body JSON
-   */
-  put<T>(
-    endpoint: string,
-    body: unknown,
-    headers?: HeadersInit,
-  ): Promise<ApiResponse<T>> {
-    return request<T>(endpoint, {
-      method: "PUT",
-      body: JSON.stringify(body),
-      headers,
-    });
-  },
-
-  /**
-   * Gửi HTTP DELETE
-   */
-  delete<T>(endpoint: string, headers?: HeadersInit): Promise<ApiResponse<T>> {
-    return request<T>(endpoint, { method: "DELETE", headers });
-  },
-};
+    return Promise.reject(error);
+  }
+);
 
 export default apiClient;
+

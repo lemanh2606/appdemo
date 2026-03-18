@@ -17,6 +17,8 @@ import store from "../redux/store";
 
 import sessionService, { SessionData } from "../services/sessionService";
 
+import { ReactQueryProvider } from "../providers/ReactQueryProvider";
+
 SplashScreen.preventAutoHideAsync();
 
 // ─── Auth Context ─────────────────────────────────────────────
@@ -75,26 +77,29 @@ export default function RootLayout() {
 
   return (
     <Provider store={store}>
-      <AuthContext.Provider value={{ session, isLoading, signIn, signOut }}>
-        {/* ✅ Stack.Protected thay hoàn toàn AuthGuard + useEffect */}
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: "#FFFFFF" },
-          }}
-        >
-          {/* Chỉ hiện khi CHƯA đăng nhập */}
-          <Stack.Protected guard={!session}>
-            <Stack.Screen name="index" /> {/* màn hình login */}
-          </Stack.Protected>
+      <ReactQueryProvider>
+        <AuthContext.Provider value={{ session, isLoading, signIn, signOut }}>
+          {/* ✅ Stack.Protected thay hoàn toàn AuthGuard + useEffect */}
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: "#FFFFFF" },
+            }}
+          >
+            {/* Chỉ hiện khi CHƯA đăng nhập */}
+            <Stack.Protected guard={!session}>
+              <Stack.Screen name="index" /> {/* màn hình login */}
+            </Stack.Protected>
 
-          {/* Chỉ hiện khi ĐÃ đăng nhập */}
-          <Stack.Protected guard={!!session}>
-            <Stack.Screen name="(tabs)" />
-          </Stack.Protected>
-        </Stack>
-        <StatusBar style="light" />
-      </AuthContext.Provider>
+            {/* Chỉ hiện khi ĐÃ đăng nhập */}
+            <Stack.Protected guard={!!session}>
+              <Stack.Screen name="(tabs)" />
+            </Stack.Protected>
+          </Stack>
+          <StatusBar style="light" />
+        </AuthContext.Provider>
+      </ReactQueryProvider>
     </Provider>
   );
 }
+

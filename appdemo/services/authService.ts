@@ -79,23 +79,15 @@ export type LoginResponse = LoginSuccessResponse | LoginFailResponse;
 
 /**
  * Đăng nhập người dùng.
- *
- * Flow:
- *  1. Tạo DeviceCode từ thông tin thiết bị
- *  2. Gọi POST /Auth/login
- *  3. Nếu thành công → lưu token + user vào AsyncStorage
- *
- * @param username  Tên đăng nhập do người dùng nhập
- * @param password  Mật khẩu do người dùng nhập
- * @returns         ApiResponse<LoginResponse>
- *                    • ok = true  → data chứa token và thông tin user
- *                    • ok = false → error chứa message lỗi từ server
+ * 
+ * @param username  Tên đăng nhập
+ * @param password  Mật khẩu
+ * @returns         Promise<LoginResponse>
  */
 async function login(
   username: string,
   password: string,
-): Promise<ApiResponse<LoginResponse>> {
-  // Tạo device code từ thông tin phần cứng thiết bị
+): Promise<LoginResponse> {
   const deviceCode = `${Device.brand}-${Device.modelName}-${Device.osBuildId}`;
 
   const payload: LoginPayload = {
@@ -104,25 +96,26 @@ async function login(
     UserName: username,
   };
 
+  // Axios trả về { data, status, ... }
   const response = await apiClient.post<LoginResponse>("/Auth/login", payload);
+  const data = response.data;
 
-  if (response.ok && response.data?.success && "token" in response.data) {
+  // Xử lý lưu session nếu thành công
+  if (data.success && "token" in data) {
     await sessionService.save({
-      token: response.data.token,
-      refreshToken: response.data.refreshToken,
-      user: response.data.staff,
+      token: data.token,
+      refreshToken: data.refreshToken,
+      user: data.staff,
     });
   }
 
-  return response;
+  return data;
 }
 
 // ─── Hàm logout ──────────────────────────────────────────────
 
 /**
  * Đăng xuất người dùng.
- * Xóa toàn bộ dữ liệu phiên khỏi bộ nhớ cục bộ.
- * (Nếu server có API logout, thêm lời gọi ở đây trước khi clear.)
  */
 async function logout(): Promise<void> {
   await sessionService.clear();
@@ -136,3 +129,4 @@ const authService = {
 };
 
 export default authService;
+
